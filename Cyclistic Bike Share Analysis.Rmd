@@ -10,12 +10,9 @@ output:
       fg: "#202C39"
       primary: "#5793A3"
       base_font:
-        #google: "Figtree"
-        google: "Roboto"
+        google: "Fira Sans"
       heading_font:
-        #google: "Scope One"
-        #google: "Sofia Sans Condensed"
-        google: "Oswald"
+        google: "Fira Sans Extra Condensed"
       code_font:
         google: "Roboto Mono"
     toc: true
@@ -23,9 +20,14 @@ output:
     toc_depth: 2
 ---
 
-```{r include=FALSE}
-# Load packages
-library(here)
+```{r setup, include=FALSE}
+# Knitr chunk options
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.align = "center",
+	message = FALSE,
+	warning = FALSE
+)
 ```
 
 ![A rack of Bike Share bikes with the Cyclistic logo](img/cyclistic-banner.png)
@@ -47,6 +49,7 @@ This project will answer the following key question:
 > **How do casual riders and annual members use Cyclistic bikes differently?**
 
 ## Supporting questions
+
 In order to answer the key question, the following questions will be analysed:
 
 -   What proportion of the total rides come from casual riders?
@@ -56,22 +59,190 @@ In order to answer the key question, the following questions will be analysed:
 -   Which rental stations are most popular with each type of rider?
 -   Is the total number of rides trending up or down for each type of rider?
 -   Which types of bike are most popular with each type of rider?
+-   How many riders make round trips (where start and end station is the same)? Is one type of rider more likely to do this than another?
 
 ## Key stakeholders
 
 The key stakeholders for this project are:
 
-- Director of Marketing
-- 
+-   Director of Marketing
+-   Marketing team
+-   Cyclistic executive team
 
-# Data sources
+The key stakeholders are non-technical business leaders. This report will present findings in plain English and will be accompanied by an executive summary slide deck.
+
+# Prepare data
+
+In this section, we provide a description of all data sources used and how the data is organised. We check for issues with bias or credibility and verify the data's integrity. We check that the data will answer our questions, and that there are no problems with the data.
+
+## Data sources
 
 In order to answer the business question, this report uses [Cyclistic's historical trip data](https://divvy-tripdata.s3.amazonaws.com/index.html).[^1] This dataset contains the following information:
 
-- Ride ID
-- Type of bike
-- Start and end date and time of the ride
-- Start and end station name, ID and latitude/longitude
-- Rider type (member or casual)
-
 [^1]: Data is provided under [licence](https://divvybikes.com/data-license-agreement) from [Lyft Bikes and Scooters, LLC](https://divvybikes-marketing-staging.lyft.net/system-data)
+
+-   Ride ID
+-   Type of bike
+-   Start and end date and time of the ride
+-   Start and end station name, ID and latitude/longitude
+-   Rider type (member or casual)
+
+For this analysis we downloaded data for the last 12 months from the source above. This analysis covers the period from 1 January 2024 to 31 December 2024.
+
+## Load data
+
+We read the data for the last 12 months by running the `1_read_data.R` script located in the working directory.
+
+```{r load-data}
+source(here::here("R/1_read_data.R"))
+
+# View the head of the data
+head(df)
+```
+
+## Data profiling
+
+We run code to produce a profile of each column within the data set.
+
+```{r profile-data}
+skimr::skim_without_charts(df)
+```
+
+From the data profile, we can see that there are \>1M records with missing data for start and end stations. We need to better understand where these missing records occur. First let's try counting the number of missing records by filename.
+
+```{r missing-data}
+df |> 
+  filter(is.na(start_station_id) | is.na(end_station_id)) |> 
+  count(short_filename)
+```
+
+There is missing data within every file. Let's check if the missing data is restricted to a specific bike type.
+
+```{r missing-by-bike-type}
+df |> 
+ filter(is.na(start_station_id) | is.na(end_station_id)) |> 
+  count(rideable_type) 
+```
+
+Here we can see that most of the missing station data is coming from electric bikes. We can check to see if the latitude and longitude associated with the missing records can be matched to records without missing station data. If so, we can infer the station data from the non-missing records.
+
+```{r missing-data-lat-long}
+# How many stations are there for every distinct lat/long?
+df |> 
+  group_by(start_lat, start_lng) |> 
+  mutate(stations = n_distinct(start_station_id)) |> 
+  filter(stations > 1) |> 
+  select(start_lat, start_lng, stations, start_station_id, start_station_name) |> 
+  distinct() |> 
+  arrange(start_station_id) |> 
+  head(10)
+```
+
+```{r lat-long-by-station}
+# How many lat/longs are there for every distinct station?
+df |> 
+  group_by(start_station_id) |> 
+  mutate(lat_lngs = n_distinct(start_lat, start_lng)) |> 
+  filter(lat_lngs > 1) |> 
+  select(start_lat, start_lng, lat_lngs, start_station_id, start_station_name) |> 
+  distinct() |> 
+  arrange(start_lat) |> 
+  head(10)
+```
+
+The code above shows that there is a many-to-many relationship between station ID and lat/long, meaning that for every station ID there can be many lat/long values and for every lat/long value there can be many station IDs. This will make it difficult to infer missing station data, and therefore we will elect to exclude records with missing station data in the analysis of questions related to rental stations.
+
+We can also review the `station_id` and `station_name` columns to ensure that we have consistency with the IDs and names. First, we set up a dataframe containing all of the distinct combinations of `station_id` and `station_name`.
+
+```{r stations}
+start_stations <- 
+  df |> 
+  select(
+    station_id = start_station_id,
+    station_name = start_station_name
+  ) |> 
+  distinct()
+
+end_stations <- 
+  df |> 
+  select(
+    station_id = end_station_id,
+    station_name = end_station_name
+  ) |> 
+  distinct()
+
+stations <- 
+  start_stations |> 
+  bind_rows(end_stations) |> 
+  distinct() |> 
+  arrange(station_id)
+```
+
+We can use this dataframe to check that each `station_id` is associated with a single `station_name`.
+
+```{r check-station-id}
+stations |> 
+  count(station_id) |> 
+  arrange(desc(n)) |> 
+  filter(n > 1)
+```
+
+There are 97 `station_id`s that are associated with multiple `station_name`s. We'll ned to account for this in the data cleaning.
+
+Next, we check whether each `station_name` is associated with a single `station_id`.
+
+```{r check-station-names}
+stations |> 
+  count(station_name) |> 
+  arrange(desc(n)) |> 
+  filter(n > 1)
+```
+
+There are 49 station names that are associated with multiple station IDs.
+
+We can also check the validity of the trip durations by calculating the number of minutes between the start and end times of each trip, and then reviewing the summary statistics for these values.
+
+```{r trip-durations}
+df |> 
+  mutate(trip_duration = as.numeric(difftime(ended_at, started_at, units = "mins"))) |> 
+  pull(trip_duration) |> 
+  summary()
+```
+
+Here we can see that most of the values lie between 5 minutes and 17 minutes, but there are some outliers. The minimum value is -2,748 minutes, which doesn't make sense. It means that the end time is before the start time. We should plan to exclude any negative values of trip duration in our analysis.
+
+```{r negative-trip-durations}
+df |> 
+  mutate(trip_duration = as.numeric(difftime(ended_at, started_at, units = "mins"))) |> 
+  filter(trip_duration < 0) |> 
+  count()
+```
+
+There are 227 records with a negative trip duration.
+
+## Data integrity
+
+The table below summarises our analysis of the integrity of this data set.
+
+| Principle | Passing threshold | Pass/Fail | Comments |
+|-----------------|-----------------------|-----------------|-----------------|
+| Reliable | Accurate, complete, unbiased | Fail | Data has missing and inconsistent values for station IDs and locations. Proceed with caution when using these fields |
+| Original | Data comes from original source | Pass | Data is from original source |
+| Comprehensive | Contains all critical information needed to answer the question | Pass | Data is provided for all trips, with the exception of missing data as noted above |
+| Current | Current and relevant to the task at hand | Pass | Data is provided up to and including last month |
+| Cited | Data comes from a known and credible source | Pass | Data is provided directly by Lyft, the company that operates the bike-share system |
+
+Based on our analysis there are some reliability issues that we have to deal with. Where we need to analyse a question that relies on fields with missing values, the observations with missing data will first be excluded from the data set.
+
+# Process data
+
+In this section, we document the steps taken to clean the data ready for analysis. In order to be ready for analysis the data will:
+
+- Have a consistent and appropriate data type for each field
+- Be free of null values (using either an inferred value or a string to denote that the data is missing)
+- Station IDs and names will be consistent (there should be a one-to-one relationship between station ID and station name)
+- Exclude trips with a negative trip duration (where the end time occurs before the start time)
+- Include engineered features necessary to answer the business question
+- Be converted into a dimensional data model
+
+The data processing steps for this analysis are performed in the `R/2_process_data.R` script.

@@ -1,0 +1,30 @@
+---
+title: "Cyclistic Bike Share"
+subtitle: "Case study prepared for the Google Data Analytics Certificate"
+author: "Clare Gibson"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    theme:
+      bg: "#ECF0F4"
+      fg: "#202C39"
+      primary: "#5793A3"
+      base_font:
+        google: "Fira Sans"
+      heading_font:
+        google: "Fira Sans Extra Condensed"
+      code_font:
+        google: "Roboto Mono"
+    toc: true
+    toc_float: true
+    toc_depth: 2
+---
+
+# Introduction
+Here is some introduction text for the test document.
+
+*Here is some text in italics*
+
+**Here is some text in bold**
+
+`Here is some monospaced text`
