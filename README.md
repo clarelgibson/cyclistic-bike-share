@@ -36,10 +36,13 @@ renv::init()
 ```
 
 ## Author
+
 - [Clare Gibson](https://www.surreydatagirl.com) - [surreydatagirl@gmail.com](mailto:surreydatagirl.com)
 
 ## Licence
 This project is licensed under the CC0 1.0 Universal licence. See the [LICENSE](./LICENSE) file for details.
 
 ## Acknowledgements
--   **[TODO]** List any reference material used in this project.
+
+- [Capstone project description](https://www.coursera.org/learn/google-data-analytics-capstone?specialization=google-data-analytics)
+- Case study inspired by [this work](https://public.tableau.com/app/profile/joe.petosa/viz/CyclisticBikeshareinChicago/CyclisticBikeshareinChicago) by [Joey Petosa](https://www.joeypetosa.com)
