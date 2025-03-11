@@ -6,10 +6,26 @@ The fictional bike-share company Cyclistic wishes to maximize the number of annu
 
 ## Getting started
 ### Analysis
-- **[TODO]** Add link to final analysis here.
+- [Blog post](https://www.datatranslator.co.uk/portfolio/cyclistic-bike-share/)
+- [Case study on Tableau](https://public.tableau.com/app/profile/datatranslator/viz/CyclisticBikeShare_17374793232980/CaseStudy)
 
 ### Data
--   [Trip data](https://divvy-tripdata.s3.amazonaws.com/index.html) (under [licence](https://divvybikes.com/data-license-agreement) from [Lyft Bikes and Scooters, LLC](https://divvybikes-marketing-staging.lyft.net/system-data))
+This project uses [trip data](https://divvy-tripdata.s3.amazonaws.com/index.html) for the year 2024 sourced from Divvy Bikes (under [licence](https://divvybikes.com/data-license-agreement) from [Lyft Bikes and Scooters, LLC](https://divvybikes-marketing-staging.lyft.net/system-data)).
+
+To recreate this analysis, the following source data files should be downloaded and placed into the `/data/src` folder:
+
+- [202401-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202401-divvy-tripdata.zip)
+- [202402-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202402-divvy-tripdata.zip)
+- [202403-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202403-divvy-tripdata.zip)
+- [202404-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202404-divvy-tripdata.zip)
+- [202405-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202405-divvy-tripdata.zip)
+- [202406-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202406-divvy-tripdata.zip)
+- [202407-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202407-divvy-tripdata.zip)
+- [202408-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202408-divvy-tripdata.zip)
+- [202409-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202409-divvy-tripdata.zip)
+- [202410-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202410-divvy-tripdata.zip)
+- [202411-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202411-divvy-tripdata.zip)
+- [202412-divvy-tripdata.zip](https://divvy-tripdata.s3.amazonaws.com/202412-divvy-tripdata.zip)
 
 ### Packages
 This project uses `renv` for package management. To set up the packages needed for this project run the following code in the console:
