@@ -10,9 +10,9 @@ output:
       fg: "#202C39"
       primary: "#5793A3"
       base_font:
-        google: "Fira Sans"
+        google: "Sofia Sans"
       heading_font:
-        google: "Fira Sans Extra Condensed"
+        google: "DM Serif Display"
       code_font:
         google: "Roboto Mono"
     toc: true
